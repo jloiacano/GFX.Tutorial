@@ -27,15 +27,37 @@ namespace GFX.Tutorial.Client
             Exit += (sender, args) => Dispose();
         }
 
+        /// <summary>
+        /// Functional Constructor
+        /// </summary>
         private void Ctor()
         {
-            var readOnlyList = WindowFactory.SeedWindows();
+            RenderHosts = WindowFactory.SeedWindows();
+
+            while (!Dispatcher.HasShutdownStarted)
+            {
+                Render(RenderHosts);
+                System.Windows.Forms.Application.DoEvents();
+            }
         }
 
         public void Dispose()
         {
+            // dispose all renderhosts that we have
             RenderHosts.ForEach(renderHost => renderHost.Dispose());
             RenderHosts = default;
+        }
+
+        #endregion
+
+        #region // render
+
+        private static void Render(IEnumerable<IRenderHost> renderHosts)
+        {
+            if (renderHosts != null)
+            {
+                renderHosts.ForEach(renderHost => renderHost.Render());
+            }
         }
 
         #endregion

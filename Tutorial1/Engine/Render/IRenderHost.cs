@@ -11,5 +11,9 @@ namespace GFX.Tutorial.Engine.Render
     {
         // The pointer to the window
         IntPtr HostHandle { get; }
+
+        FramesPerSecondCounter FramesPerSecondCounter { get; }
+
+        void Render();
     }
 }

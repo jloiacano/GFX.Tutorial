@@ -10,6 +10,8 @@ namespace GFX.Tutorial.Engine.Render
 
         public IntPtr HostHandle { get; private set; }
 
+        public FramesPerSecondCounter FramesPerSecondCounter { get; private set; }
+
         #endregion
 
         #region ctor
@@ -20,24 +22,34 @@ namespace GFX.Tutorial.Engine.Render
         protected RenderHost(IntPtr hostHandle)
         {
             HostHandle = hostHandle;
+
+            FramesPerSecondCounter = new FramesPerSecondCounter(new TimeSpan(0, 0, 0, 0, 1000));
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            FramesPerSecondCounter?.Dispose();
+            FramesPerSecondCounter = default;
+            // default keyword: set reference type to null object (in this case as an object of type IntPtr
+            // the default is: IntPtr.Zero which is an empty static readonly struct)
+            HostHandle = default;
         }
+        
+        #endregion
 
-        protected virtual void Dispose(bool disposing)
+        #region // render
+
+        public void Render()
         {
-            if (disposing)
-            {
-                // default keyword: set reference type to null object (in this case as an object of type IntPtr
-                // the default is: IntPtr.Zero which is an empty static readonly struct)
-                HostHandle = default;
-            }
+            FramesPerSecondCounter.StartFrame();
+
+            RenderInternal();
+
+            FramesPerSecondCounter.StopFrame();
         }
 
+        protected abstract void RenderInternal();
+        
         #endregion
 
     }

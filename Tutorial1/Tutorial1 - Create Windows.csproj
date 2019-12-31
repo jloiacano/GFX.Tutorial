@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Drivers\GraphicsDeviceInterface\Render\RenderHost.cs" />
+    <Compile Include="Engine\Render\FramesPerSecondCounter.cs" />
     <Compile Include="Engine\Render\IRenderHost.cs" />
     <Compile Include="Engine\Render\RenderHost.cs" />
     <Compile Include="Client\Program.cs" />
