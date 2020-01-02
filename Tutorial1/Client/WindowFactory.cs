@@ -27,6 +27,33 @@ namespace GFX.Tutorial.Client
             return renderHosts;
         }
 
+        /// <summary>
+        /// Create <see cref="System.Windows.Forms"/> API host control
+        /// </summary>
+        /// <returns></returns>
+        private static System.Windows.Forms.Control CreateHostControl()
+        {
+            System.Windows.Forms.Control hostControl = new System.Windows.Forms.Panel()
+            {
+                Dock = System.Windows.Forms.DockStyle.Fill,
+                BackColor = Color.Aqua,
+                ForeColor = Color.Transparent,
+            };
+
+            void EnsureFocus(System.Windows.Forms.Control control)
+            {
+                if (!control.Focused)
+                {
+                    control.Focus();
+                }
+            }
+
+            // focus control, so that we can capture mousewheel events
+            hostControl.MouseEnter += (sender, args) => EnsureFocus(hostControl);
+            hostControl.MouseClick += (sender, args) => EnsureFocus(hostControl);
+
+            return hostControl;
+        }
 
         private static IRenderHost CreateWindowForm(Size size, string title, Func<IntPtr, IRenderHost> constructorForRenderHost)
         {
@@ -36,12 +63,7 @@ namespace GFX.Tutorial.Client
                 Text = title
             };
 
-            var hostControl = new System.Windows.Forms.Panel()
-            {
-                Dock = System.Windows.Forms.DockStyle.Fill,
-                BackColor = Color.Transparent,
-                ForeColor = Color.Transparent
-            };
+            var hostControl = CreateHostControl();
 
             window.Controls.Add(hostControl);
 
@@ -77,27 +99,22 @@ namespace GFX.Tutorial.Client
                 Title = title
             };
 
-            var hostControl = new System.Windows.Controls.Grid
+            var hostControl = CreateHostControl();
+
+            // create forms host which is basically a wrapper for the WPF to function properly
+            var windowsFormsHost = new System.Windows.Forms.Integration.WindowsFormsHost()
             {
-                Background = System.Windows.Media.Brushes.Transparent,
-                Focusable = true,
+                Child = hostControl,
+
+                // Here, if need be, you can add necessary properties for the WPF
+                //Width = 300,
+                //Height = 200,
+                //HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+                //VerticalAlignment = System.Windows.VerticalAlignment.Top,
+                //Margin = new System.Windows.Thickness(200, 100, 0, 0)
             };
 
-            window.Content = hostControl;
-
-            // handle panel mouseover for scroll-wheel actions when this is not the active panel
-            hostControl.MouseEnter += (sender, args) =>
-            {
-                if (!window.IsActive)
-                {
-                    window.Activate();
-                }
-
-                if (!hostControl.IsFocused)
-                {
-                    hostControl.Focus();
-                }
-            };
+            window.Content = windowsFormsHost;
 
             window.Closed += (sender, args) => System.Windows.Application.Current.Shutdown();
 
