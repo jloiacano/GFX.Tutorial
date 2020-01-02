@@ -28,7 +28,7 @@ namespace GFX.Tutorial.Engine.Render
 
         public virtual void Dispose()
         {
-            FramesPerSecondCounter?.Dispose();
+            FramesPerSecondCounter.Dispose();
             FramesPerSecondCounter = default;
             // default keyword: set reference type to null object (in this case as an object of type IntPtr
             // the default is: IntPtr.Zero which is an empty static readonly struct)

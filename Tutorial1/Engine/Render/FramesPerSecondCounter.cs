@@ -38,11 +38,33 @@ namespace GFX.Tutorial.Engine.Render
 
         public void Dispose()
         {
-            StopwatchUpdate?.Stop();
+            DisposeStopwatchUpdate();
+            DisposeStopwatchFrame();
+        }
+
+        #region // Disposal Helpers
+
+        public void DisposeStopwatchUpdate()
+        {
+            if (StopwatchUpdate == null)
+            {
+                throw new NullReferenceException("StopwatchUpdate in Engine\\Render\\FramesPerSecondCounter is NULL");
+            }
+            StopwatchUpdate.Stop();
             StopwatchUpdate = default;
-            StopwatchFrame?.Stop();
+        }
+
+        public void DisposeStopwatchFrame()
+        {
+            if (StopwatchFrame == null)
+            {
+                throw new NullReferenceException("StopwatchFrame in Engine\\Render\\FramesPerSecondCounter is NULL");
+            }
+            StopwatchFrame.Stop();
             StopwatchFrame = default;
         }
+
+        #endregion
 
         #endregion
 
