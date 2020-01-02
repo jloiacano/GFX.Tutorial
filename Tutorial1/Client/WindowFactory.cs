@@ -67,20 +67,6 @@ namespace GFX.Tutorial.Client
 
             window.Controls.Add(hostControl);
 
-            // handle panel mouseover for scroll-wheel actions when this is not the active panel
-            hostControl.MouseEnter += (sender, args) =>
-            {
-                if (System.Windows.Forms.Form.ActiveForm != window)
-                {
-                    window.Activate();
-                }
-
-                if (!hostControl.Focused)
-                {
-                    hostControl.Focus();
-                }
-            };
-
             window.Closed += (sender, args) => System.Windows.Application.Current.Shutdown();
 
             window.Show();
