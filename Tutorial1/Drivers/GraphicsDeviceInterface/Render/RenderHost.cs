@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using GFX.Tutorial.Windows;
 
 namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 {
@@ -8,8 +9,19 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
     {
         #region // storage
 
+        /// <summary>
+        /// Graphics retrieved from <see cref="IRenderHost.HostHandle"/>
+        /// </summary>
         private Graphics GraphicsHost { get; set; }
 
+        /// <summary>
+        /// Double buffer wrapper
+        /// </summary>
+        private BufferedGraphics BufferedGraphics { get; set; }
+
+        /// <summary>
+        /// Font for drawing text with <see cref="System.Drawing"/>
+        /// </summary>
         private Font FontConsolas12 { get; set; }
 
         #endregion
@@ -20,12 +32,15 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             base(hostHandle)
         {      
             GraphicsHost = Graphics.FromHwnd(HostHandle);
+            Rectangle rectangleForBufferedGraphics = new Rectangle(Point.Empty, WindowsCalls.GetClientRectangle(HostHandle).Size);
+            BufferedGraphics = BufferedGraphicsManager.Current.Allocate(GraphicsHost, rectangleForBufferedGraphics);
             FontConsolas12 = new Font("Consolas", 12);
         }
 
         public override void Dispose()
         {
             DisposeGraphicsHost();
+            DisposeBufferedGraphics();
             DisposeFontConsolas12();
 
             base.Dispose();
@@ -41,6 +56,16 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             }
             GraphicsHost.Dispose();
             GraphicsHost = default;
+        }
+
+        public void DisposeBufferedGraphics()
+        {
+            if (BufferedGraphics == null)
+            {
+                throw new NullReferenceException("BufferedGraphics in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
+            }
+            BufferedGraphics.Dispose();
+            BufferedGraphics = default;
         }
 
         public void DisposeFontConsolas12()
@@ -61,9 +86,11 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 
         protected override void RenderInternal()
         {
-            GraphicsHost.Clear(Color.Gray);
+            BufferedGraphics.Graphics.Clear(Color.Gray);
             string renderTime = FramesPerSecondCounter.FramesPerSecondString;
-            GraphicsHost.DrawString($"{renderTime}", FontConsolas12, Brushes.Red, 0, 0);
+            BufferedGraphics.Graphics.DrawString($"{renderTime}", FontConsolas12, Brushes.Blue, 0, 0);
+
+            BufferedGraphics.Render();
         }
 
         #endregion
