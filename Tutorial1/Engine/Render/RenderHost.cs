@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GFX.Tutorial.Inputs;
+using System;
 
 namespace GFX.Tutorial.Engine.Render
 {
@@ -10,6 +11,8 @@ namespace GFX.Tutorial.Engine.Render
 
         public IntPtr HostHandle { get; private set; }
 
+        public IInput HostInput { get; private set; }
+
         public FramesPerSecondCounter FramesPerSecondCounter { get; private set; }
 
         #endregion
@@ -19,9 +22,11 @@ namespace GFX.Tutorial.Engine.Render
         /// <summary>
         /// Takes hostHandle from window and saves it
         /// </summary>
-        protected RenderHost(IntPtr hostHandle)
+        protected RenderHost(IRenderHostSetup renderhHostSetup)
         {
-            HostHandle = hostHandle;
+            HostHandle = renderhHostSetup.HostHandle;
+
+            HostInput = renderhHostSetup.HostInput;
 
             FramesPerSecondCounter = new FramesPerSecondCounter(new TimeSpan(0, 0, 0, 0, 1000));
         }
@@ -30,8 +35,10 @@ namespace GFX.Tutorial.Engine.Render
         {
             FramesPerSecondCounter.Dispose();
             FramesPerSecondCounter = default;
-            // default keyword: set reference type to null object (in this case as an object of type IntPtr
-            // the default is: IntPtr.Zero which is an empty static readonly struct)
+
+            HostInput.Dispose();
+            HostInput = default;
+
             HostHandle = default;
         }
         

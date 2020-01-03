@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using GFX.Tutorial.Engine.Render;
 using GFX.Tutorial.Windows;
 
 namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
@@ -28,8 +29,8 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 
         #region // constructor
 
-        public RenderHost(IntPtr hostHandle) : 
-            base(hostHandle)
+        public RenderHost(IRenderHostSetup renderHostSetup) : 
+            base(renderHostSetup)
         {      
             GraphicsHost = Graphics.FromHwnd(HostHandle);
             Rectangle rectangleForBufferedGraphics = new Rectangle(Point.Empty, WindowsCalls.GetClientRectangle(HostHandle).Size);

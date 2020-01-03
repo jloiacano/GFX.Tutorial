@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GFX.Tutorial.Inputs;
+using System;
 
 namespace GFX.Tutorial.Engine.Render
 {
@@ -11,6 +12,9 @@ namespace GFX.Tutorial.Engine.Render
     {
         // The pointer to the window
         IntPtr HostHandle { get; }
+
+        // Input from host
+        IInput HostInput { get; }
 
         FramesPerSecondCounter FramesPerSecondCounter { get; }
 

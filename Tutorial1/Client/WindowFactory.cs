@@ -17,8 +17,8 @@ namespace GFX.Tutorial.Client
 
             var renderHosts = new[]
             {
-                CreateWindowForm(size, "Forms Gdi", handle => new Drivers.GraphicsDeviceInterface.Render.RenderHost(handle)),
-                CreateWindowWpf(size, "WPF Gdi", handle => new Drivers.GraphicsDeviceInterface.Render.RenderHost(handle)),
+                CreateWindowForm(size, "Forms Gdi", renderHostSetup => new Drivers.GraphicsDeviceInterface.Render.RenderHost(renderHostSetup)),
+                CreateWindowWpf(size, "WPF Gdi", renderHostSetup => new Drivers.GraphicsDeviceInterface.Render.RenderHost(renderHostSetup)),
 
             };
 
@@ -55,7 +55,7 @@ namespace GFX.Tutorial.Client
             return hostControl;
         }
 
-        private static IRenderHost CreateWindowForm(Size size, string title, Func<IntPtr, IRenderHost> constructorForRenderHost)
+        private static IRenderHost CreateWindowForm(Size size, string title, Func<IRenderHostSetup, IRenderHost> constructorForRenderHost)
         {
             var window = new System.Windows.Forms.Form()
             {
@@ -71,12 +71,13 @@ namespace GFX.Tutorial.Client
 
             window.Show();
 
-            var renderHostToReturn = constructorForRenderHost(hostControl.Handle());
+            var renderHostSetup = new RenderHostSetup(hostControl.Handle(), new Inputs.InputForms(hostControl));
+            var renderHostToReturn = constructorForRenderHost(renderHostSetup);
 
             return renderHostToReturn;
         }
 
-        private static IRenderHost CreateWindowWpf(Size size, string title, Func<IntPtr, IRenderHost> constructorForRenderHost)
+        private static IRenderHost CreateWindowWpf(Size size, string title, Func<IRenderHostSetup, IRenderHost> constructorForRenderHost)
         {
             var window = new System.Windows.Window()
             {
@@ -106,7 +107,8 @@ namespace GFX.Tutorial.Client
 
             window.Show();
 
-            var renderHostToReturn = constructorForRenderHost(hostControl.Handle());
+            var renderHostSetup = new RenderHostSetup(hostControl.Handle(), new Inputs.InputForms(hostControl)); // TODO: change default to IInput
+            var renderHostToReturn = constructorForRenderHost(renderHostSetup);
 
             return renderHostToReturn;
         }
