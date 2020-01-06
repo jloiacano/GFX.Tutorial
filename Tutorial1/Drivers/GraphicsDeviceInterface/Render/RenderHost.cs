@@ -49,7 +49,7 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 
         #region // Disposal Helpers
 
-        public void DisposeGraphicsHost()
+        private void DisposeGraphicsHost()
         {
             if (GraphicsHost == null)
             {
@@ -59,7 +59,7 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             GraphicsHost = default;
         }
 
-        public void DisposeBufferedGraphics()
+        private void DisposeBufferedGraphics()
         {
             if (BufferedGraphics == null)
             {
@@ -69,7 +69,7 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             BufferedGraphics = default;
         }
 
-        public void DisposeFontConsolas12()
+        private void DisposeFontConsolas12()
         {
             if (FontConsolas12 == null)
             {

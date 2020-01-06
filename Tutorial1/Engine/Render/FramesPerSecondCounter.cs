@@ -40,7 +40,7 @@ namespace GFX.Tutorial.Engine.Render
 
         #region // Disposal Helpers
 
-        public void DisposeStopwatchUpdate()
+        private void DisposeStopwatchUpdate()
         {
             if (StopwatchUpdate == null)
             {
@@ -50,7 +50,7 @@ namespace GFX.Tutorial.Engine.Render
             StopwatchUpdate = default;
         }
 
-        public void DisposeStopwatchFrame()
+        private void DisposeStopwatchFrame()
         {
             if (StopwatchFrame == null)
             {
