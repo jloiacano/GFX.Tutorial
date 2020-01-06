@@ -8,7 +8,7 @@
         /// <inheritdoc cref="System.Windows.Input.Key" />
         Key Key { get; }
 
-        /// <inheritdoc cref="KeyModifiers" />
-        KeyModifiers KeyModifiers { get; }
+        /// <inheritdoc cref="Modifiers" />
+        KeyModifiers Modifiers { get; }
     }
 }

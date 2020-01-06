@@ -90,11 +90,11 @@ namespace GFX.Tutorial.Inputs
             }
             private static void InputOneKeyDown(object sender, IKeyEventArgs args)
             {
-                Console.WriteLine($"{nameof(IInput.KeyDown)} {args.Key} {args.KeyModifiers}");
+                Console.WriteLine($"{nameof(IInput.KeyDown)} {args.Key}, Modifier Key:{args.Modifiers}");
             }
             private static void InputOneKeyUp(object sender, IKeyEventArgs args)
             {
-                Console.WriteLine($"{nameof(IInput.KeyUp)} {args.Key} {args.KeyModifiers}");
+                Console.WriteLine($"{nameof(IInput.KeyUp)} {args.Key}, Modifier Key: {args.Modifiers}");
             }
         }
 
