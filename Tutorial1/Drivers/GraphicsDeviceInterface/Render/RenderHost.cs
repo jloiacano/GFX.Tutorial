@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using GFX.Tutorial.Engine.Render;
-using GFX.Tutorial.Windows;
+using GFX.Tutorial.Utilities;
+using System.Drawing.Drawing2D;
 
 namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 {
@@ -16,9 +18,19 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
         private Graphics GraphicsHost { get; set; }
 
         /// <summary>
+        /// Device context of <see cref="GraphicsHost" />
+        /// </summary>
+        private IntPtr GraphicsHostDeviceContext { get; set; }
+
+        /// <summary>
         /// Double buffer wrapper
         /// </summary>
         private BufferedGraphics BufferedGraphics { get; set; }
+
+        /// <summary>
+        /// Back buffer
+        /// </summary>
+        private DirectBitmap BackBuffer { get; set; }
 
         /// <summary>
         /// Font for drawing text with <see cref="System.Drawing"/>
@@ -33,30 +45,45 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             base(renderHostSetup)
         {      
             GraphicsHost = Graphics.FromHwnd(HostHandle);
-            Rectangle rectangleForBufferedGraphics = new Rectangle(Point.Empty, WindowsCalls.GetClientRectangle(HostHandle).Size);
-            BufferedGraphics = BufferedGraphicsManager.Current.Allocate(GraphicsHost, rectangleForBufferedGraphics);
+            GraphicsHostDeviceContext = GraphicsHost.GetHdc();
+            //BackBuffer = new Bitmap();
+            CreateBuffers(BufferSize);
+            CreateViewport(ViewportSize);
             FontConsolas12 = new Font("Consolas", 12);
         }
 
         public override void Dispose()
         {
-            DisposeGraphicsHost();
-            DisposeBufferedGraphics();
             DisposeFontConsolas12();
+            DisposeBuffers();
+            DisposeGraphicsHostDeviceContext();
+            DisposeBufferedGraphics();
+            DisposeGraphicsHost();
 
             base.Dispose();
         }
 
         #region // Disposal Helpers
 
-        private void DisposeGraphicsHost()
+        private void DisposeFontConsolas12()
         {
-            if (GraphicsHost == null)
+            if (FontConsolas12 == null)
             {
-                throw new NullReferenceException("GrahpicsHost in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
+                throw new NullReferenceException("FontConsolas12 in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
             }
-            GraphicsHost.Dispose();
-            GraphicsHost = default;
+            FontConsolas12.Dispose();
+            FontConsolas12 = default;
+        }
+
+        private void DisposeGraphicsHostDeviceContext()
+        {
+            if (GraphicsHostDeviceContext == null || GraphicsHost == null)
+            {
+                throw new NullReferenceException("GraphicsHostDeviceContext or GraphicsHost in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
+            }
+
+            GraphicsHost.ReleaseHdc(GraphicsHostDeviceContext);
+            GraphicsHostDeviceContext = default;
         }
 
         private void DisposeBufferedGraphics()
@@ -69,17 +96,60 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             BufferedGraphics = default;
         }
 
-        private void DisposeFontConsolas12()
+        private void DisposeGraphicsHost()
         {
-            if (FontConsolas12 == null)
+            if (GraphicsHost == null)
             {
-                throw new NullReferenceException("FontConsolas12 in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
+                throw new NullReferenceException("GrahpicsHost in Drivers\\GraphicsDeviceInterface\\Render\\RenderHost is NULL");
             }
-            FontConsolas12.Dispose();
-            FontConsolas12 = default;
+            GraphicsHost.Dispose();
+            GraphicsHost = default;
         }
 
         #endregion
+
+        #endregion
+
+        #region // routines
+
+        protected override void ResizeBuffers(Size size)
+        {
+            base.ResizeBuffers(size);
+
+            DisposeBuffers();
+            CreateBuffers(size);
+        }
+
+        protected override void ResizeViewport(Size size)
+        {
+            base.ResizeViewport(size);
+
+            DisposeViewport();
+            CreateViewport(size);
+        }
+
+        private void CreateBuffers(Size size)
+        {
+            BackBuffer = new DirectBitmap(size);
+        }
+
+        private void DisposeBuffers()
+        {
+            BackBuffer.Dispose();
+            BackBuffer = default;
+        }
+
+        private void CreateViewport(Size size)
+        {
+            Rectangle rectangleForBufferedGraphics = new Rectangle(Point.Empty, size);
+            BufferedGraphics = BufferedGraphicsManager.Current.Allocate(GraphicsHostDeviceContext, rectangleForBufferedGraphics);
+            BufferedGraphics.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+        }
+
+        private void DisposeViewport()
+        {
+            DisposeBufferedGraphics();
+        }
 
         #endregion
 
@@ -87,11 +157,31 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 
         protected override void RenderInternal()
         {
-            BufferedGraphics.Graphics.Clear(Color.Gray);
-            string renderTime = FramesPerSecondCounter.FramesPerSecondString;
-            BufferedGraphics.Graphics.DrawString($"{renderTime}", FontConsolas12, Brushes.Blue, 0, 0);
+            Graphics graphics = BackBuffer.Graphics;
 
-            BufferedGraphics.Render();
+            Double t = DateTime.UtcNow.Millisecond / 1000.0;
+            Color GetColor(int x, int y) => Color.FromArgb
+                (
+                byte.MaxValue,
+                (byte)((double)x / BufferSize.Width * byte.MaxValue),
+                (byte)((double)y / BufferSize.Height * byte.MaxValue),
+                (byte)(Math.Sin(t * Math.PI) * byte.MaxValue)
+                );
+
+            Parallel.For(0, BackBuffer.Buffer.Length, index =>
+            {
+                BackBuffer.GetXY(index, out var x, out var y);
+                BackBuffer.Buffer[index] = GetColor(x, y).ToArgb();
+            });
+
+            string renderTime = FramesPerSecondCounter.FramesPerSecondString;
+            graphics.DrawString($"{renderTime}", FontConsolas12, Brushes.Lime, 0, 0);
+            graphics.DrawString($"Buffer: {BufferSize.Width}, {BufferSize.Height}", FontConsolas12, Brushes.LightGreen, 0, 16);
+            graphics.DrawString($"Viewport: {ViewportSize.Width}, {ViewportSize.Height}", FontConsolas12, Brushes.LightGreen, 0, 32);
+
+            // flush and swap buffers
+            BufferedGraphics.Graphics.DrawImage(BackBuffer.Bitmap, new RectangleF(Point.Empty, ViewportSize), new RectangleF(new PointF(-0.5f, -0.5f), BufferSize), GraphicsUnit.Pixel);
+            BufferedGraphics.Render(GraphicsHostDeviceContext);
         }
 
         #endregion
