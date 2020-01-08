@@ -48,7 +48,7 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             GraphicsHostDeviceContext = GraphicsHost.GetHdc();
             //BackBuffer = new Bitmap();
             CreateBuffers(BufferSize);
-            CreateViewport(ViewportSize);
+            CreateSurface(HostInput.Size);
             FontConsolas12 = new Font("Consolas", 12);
         }
 
@@ -56,8 +56,8 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
         {
             DisposeFontConsolas12();
             DisposeBuffers();
+            DisposeSurface();
             DisposeGraphicsHostDeviceContext();
-            DisposeBufferedGraphics();
             DisposeGraphicsHost();
 
             base.Dispose();
@@ -112,20 +112,20 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 
         #region // routines
 
+        protected override void ResizeHost(Size size)
+        {
+            base.ResizeHost(size);
+
+            DisposeSurface();
+            CreateSurface(size);
+        }
+
         protected override void ResizeBuffers(Size size)
         {
             base.ResizeBuffers(size);
 
             DisposeBuffers();
             CreateBuffers(size);
-        }
-
-        protected override void ResizeViewport(Size size)
-        {
-            base.ResizeViewport(size);
-
-            DisposeViewport();
-            CreateViewport(size);
         }
 
         private void CreateBuffers(Size size)
@@ -139,14 +139,14 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             BackBuffer = default;
         }
 
-        private void CreateViewport(Size size)
+        private void CreateSurface(Size size)
         {
             Rectangle rectangleForBufferedGraphics = new Rectangle(Point.Empty, size);
             BufferedGraphics = BufferedGraphicsManager.Current.Allocate(GraphicsHostDeviceContext, rectangleForBufferedGraphics);
             BufferedGraphics.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
         }
 
-        private void DisposeViewport()
+        private void DisposeSurface()
         {
             DisposeBufferedGraphics();
         }
@@ -177,10 +177,10 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             string renderTime = FramesPerSecondCounter.FramesPerSecondString;
             graphics.DrawString($"{renderTime}", FontConsolas12, Brushes.Lime, 0, 0);
             graphics.DrawString($"Buffer: {BufferSize.Width}, {BufferSize.Height}", FontConsolas12, Brushes.LightGreen, 0, 16);
-            graphics.DrawString($"Viewport: {ViewportSize.Width}, {ViewportSize.Height}", FontConsolas12, Brushes.LightGreen, 0, 32);
+            graphics.DrawString($"Viewport: {Viewport.Width}, {Viewport.Height}", FontConsolas12, Brushes.LightGreen, 0, 32);
 
             // flush and swap buffers
-            BufferedGraphics.Graphics.DrawImage(BackBuffer.Bitmap, new RectangleF(Point.Empty, ViewportSize), new RectangleF(new PointF(-0.5f, -0.5f), BufferSize), GraphicsUnit.Pixel);
+            BufferedGraphics.Graphics.DrawImage(BackBuffer.Bitmap, new RectangleF(Point.Empty, Viewport.Size), new RectangleF(new PointF(-0.5f, -0.5f), BufferSize), GraphicsUnit.Pixel);
             BufferedGraphics.Render(GraphicsHostDeviceContext);
         }
 

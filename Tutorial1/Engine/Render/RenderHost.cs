@@ -1,4 +1,5 @@
-﻿using GFX.Tutorial.Inputs;
+﻿using GFX.Tutorial.Engine.Common;
+using GFX.Tutorial.Inputs;
 using System;
 using System.Drawing;
 
@@ -15,6 +16,11 @@ namespace GFX.Tutorial.Engine.Render
         public IInput HostInput { get; private set; }
 
         /// <summary>
+        /// Desired surface size
+        /// </summary>
+        protected Size HostSize { get; private set; }
+
+        /// <summary>
         /// Desired buffer size
         /// </summary>
         protected Size BufferSize { get; private set; }
@@ -22,7 +28,7 @@ namespace GFX.Tutorial.Engine.Render
         /// <summary>
         /// The size to which the buffer will be scaled
         /// </summary>
-        protected Size ViewportSize { get; private set; }
+        protected Viewport Viewport { get; private set; }
 
         public FramesPerSecondCounter FramesPerSecondCounter { get; private set; }
 
@@ -39,9 +45,11 @@ namespace GFX.Tutorial.Engine.Render
 
             HostInput = renderhHostSetup.HostInput;
 
+            HostSize = HostInput.Size;
+
             BufferSize = HostInput.Size;
 
-            ViewportSize = HostInput.Size;
+            Viewport = new Viewport(Point.Empty, HostSize, 0, 1);
 
             FramesPerSecondCounter = new FramesPerSecondCounter(new TimeSpan(0, 0, 0, 0, 1000));
 
@@ -55,8 +63,9 @@ namespace GFX.Tutorial.Engine.Render
             FramesPerSecondCounter.Dispose();
             FramesPerSecondCounter = default;
 
+            Viewport = default;
             BufferSize = default;
-            ViewportSize = default;
+            HostSize = default;
 
             HostInput.Dispose();
             HostInput = default;
@@ -70,27 +79,38 @@ namespace GFX.Tutorial.Engine.Render
 
         private void HostInputOnSizeChanged(object sender, ISizeEventArgs args)
         {
-            var size = args.UpdatedSize;
-
-            // to avoid issues for drivers that do not allow an empty buffer
-            if (size.Width < 1 || size.Height < 1)
+            Size Sanitize(Size size)
             {
-                size = new Size(1, 1);
+                // to avoid issues for drivers that do not allow an empty buffer
+                if (size.Width < 1 || size.Height < 1)
+                {
+                    size = new Size(1, 1);
+                }
+                return size;
             }
 
-            //ResizeBuffers(new Size(size.Width / 10, size.Height / 10));
-            ResizeBuffers(size);
-            ResizeViewport(size);
+            Size updatedHostSize = Sanitize(HostInput.Size);
+            if (HostSize != updatedHostSize)
+            {
+                ResizeHost(updatedHostSize);
+            }
+
+            Size updatedBufferSize = Sanitize(args.UpdatedSize);
+            if (BufferSize != updatedBufferSize)
+            {
+                ResizeBuffers(updatedBufferSize);
+            }
+        }
+
+        protected virtual void ResizeHost(Size size)
+        {
+            HostSize = size;
+            Viewport = new Viewport(Point.Empty, size, 0, 1);
         }
 
         protected virtual void ResizeBuffers(Size size)
         {
             BufferSize = size;
-        }
-
-        protected virtual void ResizeViewport(Size size)
-        {
-            ViewportSize = size;
         }
 
         #endregion
