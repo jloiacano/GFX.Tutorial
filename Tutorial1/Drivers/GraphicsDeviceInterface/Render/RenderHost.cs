@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using GFX.Tutorial.Engine.Render;
 using GFX.Tutorial.Utilities;
 using System.Drawing.Drawing2D;
+using System.Windows.Media.Media3D;
+using GFX.Tutorial.Engine.Common;
 
 namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
 {
@@ -174,6 +176,16 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
                 BackBuffer.Buffer[index] = GetColor(x, y).ToArgb();
             });
 
+            // screen space triangle
+            DrawLineScreenSpace(graphics, Pens.White, new Point3D(100, 100, 0), new Point3D(100, 200, 0));
+            DrawLineScreenSpace(graphics, Pens.White, new Point3D(100, 200, 0), new Point3D(300, 200, 0));
+            DrawLineScreenSpace(graphics, Pens.White, new Point3D(300, 200, 0), new Point3D(100, 100, 0));
+
+            // view space triangle -- all things relative to viewport even after resize
+            DrawLineViewSpace(graphics, Pens.Black, new Point3D(0, 0, 0), new Point3D(0, -0.9f, 0));
+            DrawLineViewSpace(graphics, Pens.Black, new Point3D(0, -0.9f, 0), new Point3D(0.9F, -0.9f, 0));
+            DrawLineViewSpace(graphics, Pens.Black, new Point3D(0.9F, -0.9f, 0), new Point3D(0, 0, 0));
+
             string renderTime = FramesPerSecondCounter.FramesPerSecondString;
             graphics.DrawString($"{renderTime}", FontConsolas12, Brushes.Lime, 0, 0);
             graphics.DrawString($"Buffer: {BufferSize.Width}, {BufferSize.Height}", FontConsolas12, Brushes.LightGreen, 0, 16);
@@ -182,6 +194,28 @@ namespace GFX.Tutorial.Drivers.GraphicsDeviceInterface.Render
             // flush and swap buffers
             BufferedGraphics.Graphics.DrawImage(BackBuffer.Bitmap, new RectangleF(Point.Empty, Viewport.Size), new RectangleF(new PointF(-0.5f, -0.5f), BufferSize), GraphicsUnit.Pixel);
             BufferedGraphics.Render(GraphicsHostDeviceContext);
+        }
+
+        private void DrawLineScreenSpace(Graphics graphics, Pen pen, Point3D startScreen, Point3D endScreen)
+        {
+            graphics.DrawLine(pen, (float)startScreen.X, (float)startScreen.Y, (float)endScreen.X, (float)endScreen.Y);
+        }
+
+        private static Point3D TransformFromViewSpaceToScreenSpace(Viewport viewport, Point3D point)
+        {
+            return new Point3D
+                (
+                    (point.X + 1) * 0.5 * viewport.Width + viewport.X,
+                    (1 - point.Y) * 0.5 * viewport.Height + viewport.Y,
+                    0
+                );
+        }
+
+        private void DrawLineViewSpace(Graphics graphics, Pen pen, Point3D startView, Point3D endView)
+        {
+            Point3D startScreen = TransformFromViewSpaceToScreenSpace(Viewport, startView);
+            Point3D endScreen = TransformFromViewSpaceToScreenSpace(Viewport, endView);
+            DrawLineScreenSpace(graphics, pen, startScreen, endScreen);
         }
 
         #endregion
