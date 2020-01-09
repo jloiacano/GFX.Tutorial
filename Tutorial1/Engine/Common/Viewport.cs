@@ -45,11 +45,5 @@ namespace GFX.Tutorial.Engine.Common
         }
 
         #endregion
-
-        #region // routines
-
-
-
-        #endregion
     }
 }

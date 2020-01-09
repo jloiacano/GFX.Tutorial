@@ -1,10 +1,11 @@
-﻿using GFX.Tutorial.Engine.Render;
-using GFX.Tutorial.Utilities;
-using GFX.Tutorial.Windows;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+
+using GFX.Tutorial.Engine.Render;
+using GFX.Tutorial.Utilities;
+using GFX.Tutorial.Windows;
 
 namespace GFX.Tutorial.Client
 {
